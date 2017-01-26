@@ -4,10 +4,11 @@
 	and comparing new and old hashes to see if the window contents have changed during a
 	given period.
 
-	Right now it just takes the whole window region and hashes it, but in the future I'll
-	modify its behavior to include the option for X,Y offsets and W,H region sizes so you
-	can target a specific part of a window. Obviously not useful for windows that may be
-	resized by a user, but very useful if this program is run via an AutoHotKey script.
+	By default it'll check the whole window region, but you can pass it the x,y of the top
+	left corner of the region you wish to check, along with the width and height of that
+	region. Not useful under normal circumstances, but when used with another application
+	or a scripting engine like AutoHotKey, it can be automated to keep this program looking
+	at the correct screen region.
 
 	A lot of this code is borrowed and modified from various people across the internet.
 	Many thanks to their help. I wish I could attribute them all but I spent far too much
@@ -67,33 +68,34 @@ HWND find_main_window(unsigned long process_id)
 
 //to here is all for finding the PID of a process by process name...
 
-HBITMAP GetScreenBmp(HDC hdc, HWND hwnd) { //grab the bitmap of the specified window
+HBITMAP GetScreenBmp(HDC hdc, HWND hwnd, int x, int y, int h, int w) { //grab the bitmap of the specified window
 	// Get window dimensions
-	int width = 0;
-	int height = 0;
+	if (x, y, h, w = 0) { //checking if x, y, h, and w actually have non-default values
 
-	RECT rect;
-	if (GetWindowRect(hwnd, &rect))
-	{
-		width = rect.right - rect.left;
-		height = rect.bottom - rect.top;
+	//if not, just default to the whole window region instead
+		RECT rect;
+		if (GetWindowRect(hwnd, &rect))
+		{
+			w = rect.right - rect.left;
+			h = rect.bottom - rect.top;
+		}
 	}
 
 	// Create compatible DC, create a compatible bitmap and copy the screen using BitBlt()
 	HDC hCaptureDC = CreateCompatibleDC(hdc);
-	HBITMAP hBitmap = CreateCompatibleBitmap(hdc, width, height);
+	HBITMAP hBitmap = CreateCompatibleBitmap(hdc, w, h);
 	HGDIOBJ hOld = SelectObject(hCaptureDC, hBitmap);
-	BOOL bOK = BitBlt(hCaptureDC, 0, 0, width, height, hdc, 0, 0, SRCCOPY | CAPTUREBLT);
+	BOOL bOK = BitBlt(hCaptureDC, x, y, w, h, hdc, 0, 0, SRCCOPY | CAPTUREBLT);
 
 	SelectObject(hCaptureDC, hOld); // always select the previously selected object once done
 	DeleteDC(hCaptureDC);
 	return hBitmap;
 }
 
-int getScreenHash(HWND hwnd, bool verboseTrue) { //grab the screen hash for a specified window
+int getScreenHash(HWND hwnd, int x, int y, int h, int w, bool verboseTrue) { //grab the screen hash for a specified window
 	HDC hdc = GetDC(0);
 
-	HBITMAP hBitmap = GetScreenBmp(hdc, hwnd); //pass the hdc and hwnd to the bitmap grabber
+	HBITMAP hBitmap = GetScreenBmp(hdc, hwnd, x, y, h, w); //pass the hdc and hwnd to the bitmap grabber
 
 	BITMAPINFO MyBMInfo = { 0 };
 	MyBMInfo.bmiHeader.biSize = sizeof(MyBMInfo.bmiHeader);
@@ -142,6 +144,10 @@ int main(int argc, char** argv) {
 	string tempInterval = "1000";
 	int checkInterval = NULL;
 	HWND hwnd = NULL;
+	int x = 0;
+	int y = 0;
+	int h = 0;
+	int w = 0;
 
 	try {
 		//setting up the command line switches
@@ -151,8 +157,16 @@ int main(int argc, char** argv) {
 		//arguments section
 		ValueArg<string> progArg("p", "program", "program to monitor", true, "obs64.exe", "string"); //arg char, short name, long name, whether the switch can be empty, arg, val type
 		ValueArg<string> checkArg("i", "interval", "check interval in ms; default is 1000", false, "1000", "int");
+		ValueArg<string> xArg("x", "", "X coordinate of top left of screen region", false, "1", "int");
+		ValueArg<string> yArg("y", "", "y coordinate of top left of screen region", false, "1", "int");
+		ValueArg<string> hArg("h", "height", "height of the screen region you wish to select", false, "1", "int");
+		ValueArg<string> wArg("w", "width", "width of the screen region you wish to select", false, "1", "int");
 		cmd.add(progArg); //add the arguments
 		cmd.add(checkArg);
+		cmd.add(xArg);
+		cmd.add(yArg);
+		cmd.add(hArg);
+		cmd.add(wArg);
 
 		//switches section
 		SwitchArg verboseSwitch("", "verbose", "print more debug data than normal", cmd, false); //arg char, short name, long name, call to cmd array, whether switch val can be empty
@@ -185,7 +199,7 @@ int main(int argc, char** argv) {
 		cout << "Starting up..." << endl;
 
 		while (true) {
-			int screenHash = getScreenHash(hwnd, verboseTrue); //get the screenhash variable from the hashing function, passing the hwnd to it
+			int screenHash = getScreenHash(hwnd, x, y, h, w, verboseTrue); //get the screenhash variable from the hashing function, passing the hwnd to it
 
 			if (verboseTrue)
 				cout << oldScreenHash << " " << screenHash << endl;
