@@ -186,12 +186,21 @@ int main(int argc, char** argv) {
 		//now onto the main program
 
 		DWORD pid = FindProcessId(processName); //call FindProcessID to grab the PID of the program
+		string processNameTemp;
+		processNameTemp.assign(processName.begin(), processName.end());
+
+		if (pid == 0) { //exit with a code of 2 if the target application isn't found
+			if (verboseTrue) {
+				cout << "The target application " << processNameTemp << " could not be found, or isn't running!" << endl;
+				cout << "ScreenMon will now exit." << endl;
+			}
+			return 2;
+		}
+
 		hwnd = find_main_window(pid); //get hwnd of the main window of the program
 
-		if (verboseTrue) { //print the PID/hwnd out for debug
-			string processNameTemp;
-			processNameTemp.assign(processName.begin(), processName.end());
-			cout << processNameTemp << "'s PID is: " << pid << endl;
+		if (verboseTrue) { //print the pid and hwnd out for debug
+			cout << "The PID of " << processNameTemp << " is: " << pid << endl;
 			cout << "And the hwnd is: " << hwnd << endl;
 		}
 
@@ -199,6 +208,10 @@ int main(int argc, char** argv) {
 		cout << "Starting up..." << endl;
 
 		while (true) {
+			if (IsIconic(hwnd)) { //check if the program is minimized
+				ShowWindow(hwnd, 9); //restore it if it is
+			}
+
 			int screenHash = getScreenHash(hwnd, x, y, h, w, verboseTrue); //get the screenhash variable from the hashing function, passing the hwnd to it
 
 			if (verboseTrue)
@@ -208,7 +221,7 @@ int main(int argc, char** argv) {
 				
 				bool isHung = IsHungAppWindow(hwnd);
 				if (isHung) {
-					return 2; //if the target window is hung (according to windows), exit with a code of 2.
+					return 3; //if the target window is hung (according to windows), exit with a code of 3.
 				}
 				if (oldScreenHash != screenHash) {
 					cout << true;
@@ -230,7 +243,7 @@ int main(int argc, char** argv) {
 			Sleep(checkInterval);
 		}
 	}
-	catch (TCLAP::ArgException &e)  //catch argument exceptions
+	catch (ArgException &e)  //catch argument exceptions
 	{
 		std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl;
 	}
