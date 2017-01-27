@@ -70,7 +70,7 @@ HWND find_main_window(unsigned long process_id)
 
 HBITMAP GetScreenBmp(HDC hdc, HWND hwnd, int x, int y, int h, int w) { //grab the bitmap of the specified window
 	// Get window dimensions
-	if (x, y, h, w = 0) { //checking if x, y, h, and w actually have non-default values
+	if ((x & y & h & w) == 0) { //checking if x, y, h, and w actually have non-default values
 
 	//if not, just default to the whole window region instead
 		RECT rect;
@@ -85,7 +85,7 @@ HBITMAP GetScreenBmp(HDC hdc, HWND hwnd, int x, int y, int h, int w) { //grab th
 	HDC hCaptureDC = CreateCompatibleDC(hdc);
 	HBITMAP hBitmap = CreateCompatibleBitmap(hdc, w, h);
 	HGDIOBJ hOld = SelectObject(hCaptureDC, hBitmap);
-	BOOL bOK = BitBlt(hCaptureDC, x, y, w, h, hdc, 0, 0, SRCCOPY | CAPTUREBLT);
+	BOOL bOK = BitBlt(hCaptureDC, 0, 0, w, h, hdc, x, y, SRCCOPY | CAPTUREBLT);
 
 	SelectObject(hCaptureDC, hOld); // always select the previously selected object once done
 	DeleteDC(hCaptureDC);
@@ -157,8 +157,8 @@ int main(int argc, char** argv) {
 		//arguments section
 		ValueArg<string> progArg("p", "program", "program to monitor", true, "obs64.exe", "string"); //arg char, short name, long name, whether the switch can be empty, arg, val type
 		ValueArg<string> checkArg("i", "interval", "check interval in ms; default is 1000", false, "1000", "int");
-		ValueArg<string> xArg("x", "", "X coordinate of top left of screen region", false, "1", "int");
-		ValueArg<string> yArg("y", "", "y coordinate of top left of screen region", false, "1", "int");
+		ValueArg<string> xArg("x", "topleftx", "X coordinate of top left of screen region", false, "1", "int");
+		ValueArg<string> yArg("y", "toplefty", "y coordinate of top left of screen region", false, "1", "int");
 		ValueArg<string> hArg("h", "height", "height of the screen region you wish to select", false, "1", "int");
 		ValueArg<string> wArg("w", "width", "width of the screen region you wish to select", false, "1", "int");
 		cmd.add(progArg); //add the arguments
