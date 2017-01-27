@@ -1,12 +1,15 @@
 # ScreenMon
 ScreenMon is a WINDOWS ONLY application for monitoring a target program's main window area to see if it's changing. Based on that, it outputs data to STDOUT for other programs and scripts to act upon.
 
+# Behavior
+While running, ScreenMon will output TRUE or FALSE to STDOUT depending on whether it detects the target program's window contents changing. State changes across the check interval trigger a TRUE (1), no state changes trigger a FALSE (0).
+
+If the target program isn't running (or doesn't exist), ScreenMon will exit with a code of 2. This isn't printed to the console, but any application that invoked ScreenMon should be able to catch that. Similarly, if the target program hangs, ScreenMon will exit with a code of 3.
+
 # Usage
 In order to work, you have to provide the program name of a program to monitor (e.g. firefox.exe).
 
 ex: screenmon.exe -p firefox.exe
-
-This will cause ScreenMon to open and monitor firefox.exe. If the window contents aren't changing, it'll output FALSE (0) to STDOUT. If the window contents ARE changing, it'll output TRUE (1) to STDOUT.
 
 
 If the program has multiple windows open, ScreenMon will currently just grab the parent window (highest in the stack.) By default, it'll also check the whole window region for changes. This can be changed with a couple of switch options at startup:
@@ -36,8 +39,6 @@ There's also a verboseness switch that you activate using --verbose. Not useful 
 ex: screenmon.exe -p obs32.exe --verbose
 
 # Warnings, dependencies, etc.
-As of this writing, if the program you entered isn't currently running (has no PID,) the program will crash. Once I put in some error handling, it'll exit with a code of 2 to STDOUT. Additionally, there's no check to see if the program is minimized; it'll just always report true to STDOUT-- this will probably also change, since there is a Windows function call to check for this.
-
 To compile this program yourself, you need the TCLAP and Boost libraries installed. A lot of the functions I use are also only available on Windows 7 or newer, and require .NET installed to work. Additionally, you may need the VC++ x86 redist depending on what compiler you use.
 
 I provide this code with no warranties or guarentees. Being a dev isn't my day job. :)
