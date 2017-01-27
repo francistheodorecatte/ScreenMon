@@ -102,7 +102,11 @@ int getScreenHash(HWND hwnd, int x, int y, int h, int w, bool verboseTrue) { //g
 
 	// Get the BITMAPINFO structure from the bitmap
 	if (0 == GetDIBits(hdc, hBitmap, 0, 0, NULL, &MyBMInfo, DIB_RGB_COLORS)) {
-		cout << "error" << endl;
+		if (verboseTrue) {
+			cout << "Did you close the target application?" << endl;
+			cout << "ScreenMon will now exit." << endl;
+		}
+		return 2;
 	}
 
 	// create the bitmap buffer
@@ -234,7 +238,9 @@ int main(int argc, char** argv) {
 						cout << " I DON'T WORK" << endl;
 				}
 				else {
-					cout << NULL; //null right now but could be changed to be a value other than 0 (false) or 1 (true)
+					cout << 3;
+					if (verboseTrue)
+						cout << " I'm broken?" << endl;
 				}
 			}
 
