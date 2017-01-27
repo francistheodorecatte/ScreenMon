@@ -93,7 +93,7 @@ HBITMAP GetScreenBmp(HDC hdc, HWND hwnd, int x, int y, int h, int w) { //grab th
 }
 
 int getScreenHash(HWND hwnd, int x, int y, int h, int w, bool verboseTrue) { //grab the screen hash for a specified window
-	HDC hdc = GetDC(0);
+	HDC hdc = GetDC(hwnd);
 
 	HBITMAP hBitmap = GetScreenBmp(hdc, hwnd, x, y, h, w); //pass the hdc and hwnd to the bitmap grabber
 
