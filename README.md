@@ -7,7 +7,7 @@ While running, ScreenMon will output TRUE or FALSE to STDOUT depending on whethe
 If the target program isn't running (or doesn't exist), ScreenMon will exit with a code of 2. This isn't printed to the console, but any application that invoked ScreenMon should be able to catch that. Similarly, if the target program hangs, ScreenMon will exit with a code of 3.
 
 # Usage
-In order to work, you have to provide the program name of a program to monitor (e.g. firefox.exe).
+In order to work, you have to provide the program name of a program to monitor with the -p switch.
 
 ex: screenmon.exe -p firefox.exe
 
