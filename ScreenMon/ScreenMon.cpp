@@ -68,6 +68,39 @@ HWND find_main_window(unsigned long process_id)
 
 //to here is all for finding the PID of a process by process name...
 
+void showProcessInformation(DWORD pid) {
+	HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	DWORD peID;
+	DWORD meID;
+
+	if (hSnapshot) {
+		PROCESSENTRY32 pe32;
+		pe32.dwSize = sizeof(PROCESSENTRY32);
+		MODULEENTRY32 me32;
+		me32.dwSize = sizeof(MODULEENTRY32);
+		if (Process32First(hSnapshot, &pe32)) {
+			do {
+				if (pe32.th32ProcessID == pid) {
+					peID = pe32.th32ProcessID;
+					cout << "pe32 ID: " << peID << endl;
+					cout << "pe32 exe: " << pe32.szExeFile << endl;
+				}
+					
+			} while (Process32Next(hSnapshot, &pe32));
+		}
+		
+		while (Module32Next(hSnapshot, &me32)) {
+			if (me32.th32ProcessID == peID) {
+				meID = me32.th32ProcessID;
+				cout << "me32 ID: " << meID << endl;
+				cout << "me32 exe: " << me32.szExePath << endl;
+			}
+		}
+
+		CloseHandle(hSnapshot);
+	}
+}
+
 HBITMAP GetScreenBmp(HDC hdc, HWND hwnd, int x, int y, int h, int w) { //grab the bitmap of the specified window
 	// Get window dimensions
 	if ((x & y & h & w) == 0) { //checking if x, y, h, and w actually have non-default values
@@ -144,7 +177,11 @@ int getScreenHash(HWND hwnd, int x, int y, int h, int w, bool verboseTrue) { //g
 
 int main(int argc, char** argv) {
 	wstring processName;
+	string processNameTemp;
 	bool verboseTrue;
+	bool pidIn = false;
+	bool progIn = false;
+	DWORD pid;
 	string tempInterval = "1000";
 	int checkInterval = NULL;
 	HWND hwnd = NULL;
@@ -159,14 +196,16 @@ int main(int argc, char** argv) {
 		CmdLine cmd("ProgramMonitor; monitors a screen region to see if it changes.", ' ', programVersion, false); //help text, delimiter, version number, switch override
 
 		//arguments section
-		ValueArg<string> progArg("p", "program", "program to monitor", true, "obs64.exe", "string"); //arg char, short name, long name, whether the switch can be empty, arg, val type
+		ValueArg<string> progArg("p", "program", "program to monitor", false, "obs64.exe", "string"); //arg char, short name, long name, whether the switch can be empty, arg, val type
 		ValueArg<string> checkArg("i", "interval", "check interval in ms; default is 1000", false, "1000", "int");
+		ValueArg<string> pidArg("P", "pid", "the PID of the target process", false, "1250", "int");
 		ValueArg<string> xArg("x", "topleftx", "X coordinate of top left of screen region", false, "1", "int");
 		ValueArg<string> yArg("y", "toplefty", "y coordinate of top left of screen region", false, "1", "int");
 		ValueArg<string> hArg("h", "height", "height of the screen region you wish to select", false, "1", "int");
 		ValueArg<string> wArg("w", "width", "width of the screen region you wish to select", false, "1", "int");
 		cmd.add(progArg); //add the arguments
 		cmd.add(checkArg);
+		cmd.add(pidArg);
 		cmd.add(xArg);
 		cmd.add(yArg);
 		cmd.add(hArg);
@@ -188,10 +227,28 @@ int main(int argc, char** argv) {
 			cout << "checkInterval is: " << checkInterval << endl;
 
 		//now onto the main program
+		if (pidArg.getValue() != "")
+			pidIn = true;
 
-		DWORD pid = FindProcessId(processName); //call FindProcessID to grab the PID of the program
-		string processNameTemp;
-		processNameTemp.assign(processName.begin(), processName.end());
+		if (progArg.getValue() != "")
+			progIn = true;
+
+		if ((progIn == false) & (pidIn == false)) {
+			cout << "No program or PID entered to monitor!" << endl;
+			return 1;
+		}
+
+		if (progIn) {
+			if (verboseTrue)
+				cout << "using program name instead of PID" << endl;
+			pid = FindProcessId(processName); //call FindProcessID to grab the PID of the program
+			processNameTemp.assign(processName.begin(), processName.end());
+			//showProcessInformation(pid);
+		} else if (pidIn) {
+			if (verboseTrue)
+				cout << "using PID instead of program name" << endl;
+			pid = strtol((pidArg.getValue()).c_str(), 0, 0);
+		}
 
 		if (pid == 0) { //exit with a code of 2 if the target application isn't found
 			if (verboseTrue) {
@@ -202,6 +259,11 @@ int main(int argc, char** argv) {
 		}
 
 		hwnd = find_main_window(pid); //get hwnd of the main window of the program
+		
+		if (hwnd == 00000000) {
+			cout << "Returned an invalid window handle!" << endl;
+			return 1;
+		}
 
 		if (verboseTrue) { //print the pid and hwnd out for debug
 			cout << "The PID of " << processNameTemp << " is: " << pid << endl;
