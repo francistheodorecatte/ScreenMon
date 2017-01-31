@@ -11,6 +11,9 @@ In order to work, you have to provide the program name of a program to monitor w
 
 ex: screenmon.exe -p firefox.exe
 
+You can also provide the PID of the program instead, with the -P or --pid switches:
+
+ex. screenmon.exe --pid 1098
 
 If the program has multiple windows open, ScreenMon will currently just grab the parent window (highest in the stack.) By default, it'll also check the whole window region for changes. This can be changed with a couple of switch options at startup:
 
