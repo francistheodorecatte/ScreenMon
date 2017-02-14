@@ -139,7 +139,8 @@ int getScreenHash(HWND hwnd, int x, int y, int h, int w, bool verboseTrue) { //g
 			cout << "Did you close the target application?" << endl;
 			cout << "ScreenMon will now exit." << endl;
 		}
-		return 2;
+		return 4;
+		_Exit;
 	}
 
 	// create the bitmap buffer
@@ -192,7 +193,7 @@ int main(int argc, char** argv) {
 
 	try {
 		//setting up the command line switches
-		string programVersion = "0.1";
+		string programVersion = "0.2";
 		CmdLine cmd("ProgramMonitor; monitors a screen region to see if it changes.", ' ', programVersion, false); //help text, delimiter, version number, switch override
 
 		//arguments section
@@ -235,7 +236,7 @@ int main(int argc, char** argv) {
 
 		if ((progIn == false) & (pidIn == false)) {
 			cout << "No program or PID entered to monitor!" << endl;
-			return 1;
+			return 2;
 		}
 
 		if (progIn) {
@@ -255,14 +256,14 @@ int main(int argc, char** argv) {
 				cout << "The target application " << processNameTemp << " could not be found, or isn't running!" << endl;
 				cout << "ScreenMon will now exit." << endl;
 			}
-			return 2;
+			return 3;
 		}
 
 		hwnd = find_main_window(pid); //get hwnd of the main window of the program
 		
 		if (hwnd == 00000000) {
 			cout << "Returned an invalid window handle!" << endl;
-			return 1;
+			return 5;
 		}
 
 		if (verboseTrue) { //print the pid and hwnd out for debug
@@ -287,7 +288,7 @@ int main(int argc, char** argv) {
 				
 				bool isHung = IsHungAppWindow(hwnd);
 				if (isHung) {
-					return 3; //if the target window is hung (according to windows), exit with a code of 3.
+					return 6; //if the target window is hung (according to windows), exit with a code of 3.
 				}
 				if (oldScreenHash != screenHash) {
 					cout << true;
